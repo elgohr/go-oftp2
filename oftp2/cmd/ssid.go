@@ -27,13 +27,21 @@ import "bifroest/oftp2"
 //
 // https://tools.ietf.org/html/rfc5024#section-5.3.2
 
-func StartSession() oftp2.Command {
-	return oftp2.Command(ssidCmd + ssidLev + oftp2.CarriageReturn)
+type StartSessionCmd []byte
+
+func (c StartSessionCmd) Cmd() byte {
+	return c[0]
+}
+
+func (c StartSessionCmd) Lev() byte {
+	return c[1]
+}
+
+func StartSession(identification IdentificationCode) oftp2.Command {
+	return oftp2.Command(ssidCmd + ssidLev + identification + oftp2.CarriageReturn)
 }
 
 const (
-	ssidCmd = "X"
-	ssidLev = "5"
+	ssidCmd = 'X'
+	ssidLev = '5'
 )
-
-type StartSessionCmd []byte

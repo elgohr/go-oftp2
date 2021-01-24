@@ -7,17 +7,17 @@ import (
 )
 
 func TestStartSessionReadyMessage(t *testing.T) {
-	for _, scenario := range []struct{
-		name string
-		input func()[]byte
-		expect func(ssrm oftp2.StartSessionReadyMessageCmd)
+	for _, scenario := range []struct {
+		name   string
+		input  func() []byte
+		expect func(t *testing.T, ssrm oftp2.StartSessionReadyMessageCmd)
 	}{
 		{
 			name: "with a standard message",
 			input: func() []byte {
 				return oftp2.StartSessionReadyMessage()
 			},
-			expect: func(ssrm oftp2.StartSessionReadyMessageCmd) {
+			expect: func(t *testing.T, ssrm oftp2.StartSessionReadyMessageCmd) {
 				require.NoError(t, ssrm.Valid())
 				require.Equal(t, "I", string(ssrm.Cmd()))
 				require.Equal(t, "ODETTE FTP READY ", string(ssrm.Msg()))
@@ -30,7 +30,7 @@ func TestStartSessionReadyMessage(t *testing.T) {
 				m[0] = 'X'
 				return m
 			},
-			expect: func(ssrm oftp2.StartSessionReadyMessageCmd) {
+			expect: func(t *testing.T, ssrm oftp2.StartSessionReadyMessageCmd) {
 				require.Error(t, ssrm.Valid())
 				require.Equal(t, "X", string(ssrm.Cmd()))
 				require.Equal(t, "ODETTE FTP READY ", string(ssrm.Msg()))
@@ -43,16 +43,15 @@ func TestStartSessionReadyMessage(t *testing.T) {
 				m[18] = ' '
 				return m
 			},
-			expect: func(ssrm oftp2.StartSessionReadyMessageCmd) {
+			expect: func(t *testing.T, ssrm oftp2.StartSessionReadyMessageCmd) {
 				require.Error(t, ssrm.Valid())
 				require.Equal(t, "I", string(ssrm.Cmd()))
 				require.Equal(t, "ODETTE FTP READY ", string(ssrm.Msg()))
 			},
 		},
-	}{
+	} {
 		t.Run(scenario.name, func(t *testing.T) {
-			scenario.expect(scenario.input())
+			scenario.expect(t, scenario.input())
 		})
 	}
-
 }
