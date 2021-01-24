@@ -1,6 +1,10 @@
 package oftp2
 
-import "bifroest/oftp2"
+import (
+	"bifroest/oftp2"
+	"fmt"
+	"strconv"
+)
 
 // o-------------------------------------------------------------------o
 // |       SSID        Start Session                                   |
@@ -29,6 +33,15 @@ import "bifroest/oftp2"
 
 type StartSessionCmd []byte
 
+func (c StartSessionCmd) Valid() error {
+	if string(c[0]) != "X" {
+		return fmt.Errorf(oftp2.InvalidPrefixErrorFormat, "X", c[0])
+	} else if err := c.Code().Valid(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c StartSessionCmd) Cmd() byte {
 	return c[0]
 }
@@ -37,11 +50,31 @@ func (c StartSessionCmd) Lev() byte {
 	return c[1]
 }
 
-func StartSession(identification IdentificationCode) oftp2.Command {
-	return oftp2.Command(ssidCmd + ssidLev + identification + oftp2.CarriageReturn)
+func (c StartSessionCmd) Code() IdentificationCode {
+	return IdentificationCode(c[2:27])
+}
+
+func (c StartSessionCmd) Pswd() []byte {
+	return c[27:35]
+}
+
+func (c StartSessionCmd) Sdeb() int {
+	i, _ := strconv.Atoi(string(c[35:40]))
+	return i
+}
+
+func (c StartSessionCmd) Dsr() byte {
+	return c[41]
+}
+
+func StartSession(identification IdentificationCode, password string) oftp2.Command {
+	id := string(identification)
+	return oftp2.Command(ssidCmd + ssidLev + id + password + ssidDeb + ssidDsr + oftp2.CarriageReturn)
 }
 
 const (
-	ssidCmd = 'X'
-	ssidLev = '5'
+	ssidCmd = "X"
+	ssidLev = "5"
+	ssidDeb = "99999"
+	ssidDsr = "B"
 )
