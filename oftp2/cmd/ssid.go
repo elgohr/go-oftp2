@@ -64,17 +64,60 @@ func (c StartSessionCmd) Sdeb() int {
 }
 
 func (c StartSessionCmd) Dsr() byte {
-	return c[41]
+	return c[40]
+}
+
+func (c StartSessionCmd) Cmpr() bool {
+	return c[41] == 'Y'
+}
+
+func (c StartSessionCmd) Rest() bool {
+	return c[42] == 'Y'
+}
+
+func (c StartSessionCmd) Spec() bool {
+	return c[43] == 'Y'
+}
+
+func (c StartSessionCmd) Cred() int {
+	i, _ := strconv.Atoi(string(c[44:47]))
+	return i
+}
+
+func (c StartSessionCmd) Auth() bool {
+	return c[47] == 'Y'
+}
+
+func (c StartSessionCmd) User() []byte {
+	return c[48:56]
 }
 
 func StartSession(identification IdentificationCode, password string) oftp2.Command {
 	id := string(identification)
-	return oftp2.Command(ssidCmd + ssidLev + id + password + ssidDeb + ssidDsr + oftp2.CarriageReturn)
+	return oftp2.Command(ssidCmd +
+		ssidLev +
+		id +
+		password +
+		ssidDeb +
+		ssidDsr +
+		ssidCmpr +
+		ssidRest +
+		ssidSpec +
+		ssidCred +
+		ssidAuth +
+		ssidUser +
+		oftp2.CarriageReturn)
 }
 
 const (
-	ssidCmd = "X"
-	ssidLev = "5"
-	ssidDeb = "99999"
-	ssidDsr = "B"
+	ssidCmd  = "X"
+	ssidLev  = "5"
+	ssidDeb  = "99999"
+	ssidDsr  = "B"
+	ssidCmpr = "Y"
+	ssidRest = "Y"
+	ssidSpec = "Y"
+	ssidCred = "999"
+	ssidAuth = "Y"
+	ssidUser = "        "
 )

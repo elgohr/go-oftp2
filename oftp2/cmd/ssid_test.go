@@ -27,6 +27,13 @@ func TestStartSession(t *testing.T) {
 				require.NoError(t, c.Valid())
 				require.Equal(t, "password", string(ssid.Pswd()))
 				require.Equal(t, 99999, ssid.Sdeb())
+				require.Equal(t, "B", string(ssid.Dsr()))
+				require.True(t, ssid.Cmpr())
+				require.True(t, ssid.Rest())
+				require.True(t, ssid.Spec())
+				require.Equal(t, 999, ssid.Cred())
+				require.True(t, ssid.Auth())
+				require.Equal(t, "        ", string(ssid.User()))
 			},
 		},
 		{
