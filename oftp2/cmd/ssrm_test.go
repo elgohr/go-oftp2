@@ -19,8 +19,8 @@ func TestStartSessionReadyMessage(t *testing.T) {
 			},
 			expect: func(t *testing.T, ssrm oftp2.StartSessionReadyMessageCmd) {
 				require.NoError(t, ssrm.Valid())
-				require.Equal(t, "I", string(ssrm.Cmd()))
-				require.Equal(t, "ODETTE FTP READY ", string(ssrm.Msg()))
+				require.Equal(t, "I", string(ssrm.Command()))
+				require.Equal(t, "ODETTE FTP READY ", string(ssrm.Message()))
 			},
 		},
 		{
@@ -31,9 +31,9 @@ func TestStartSessionReadyMessage(t *testing.T) {
 				return m
 			},
 			expect: func(t *testing.T, ssrm oftp2.StartSessionReadyMessageCmd) {
-				require.Error(t, ssrm.Valid())
-				require.Equal(t, "X", string(ssrm.Cmd()))
-				require.Equal(t, "ODETTE FTP READY ", string(ssrm.Msg()))
+				require.EqualError(t, ssrm.Valid(), "does not start with I, but with X")
+				require.Equal(t, "X", string(ssrm.Command()))
+				require.Equal(t, "ODETTE FTP READY ", string(ssrm.Message()))
 			},
 		},
 		{
@@ -44,9 +44,9 @@ func TestStartSessionReadyMessage(t *testing.T) {
 				return m
 			},
 			expect: func(t *testing.T, ssrm oftp2.StartSessionReadyMessageCmd) {
-				require.Error(t, ssrm.Valid())
-				require.Equal(t, "I", string(ssrm.Cmd()))
-				require.Equal(t, "ODETTE FTP READY ", string(ssrm.Msg()))
+				require.EqualError(t, ssrm.Valid(), "does not end on carriage return, but on 32")
+				require.Equal(t, "I", string(ssrm.Command()))
+				require.Equal(t, "ODETTE FTP READY ", string(ssrm.Message()))
 			},
 		},
 	} {

@@ -27,21 +27,21 @@ const (
 type StartSessionReadyMessageCmd []byte
 
 func (c StartSessionReadyMessageCmd) Valid() error {
-	if len(c) != 19 {
-		return fmt.Errorf(oftp2.InvalidLengthErrorFormat, 19, len(c))
-	} else if string(c[0]) != "I" {
-		return fmt.Errorf(oftp2.InvalidPrefixErrorFormat, "I", c[0])
+	if size := len(c); size != 19 {
+		return fmt.Errorf(oftp2.InvalidLengthErrorFormat, 19, size)
+	} else if cmd := string(c[0]); cmd != "I" {
+		return fmt.Errorf(oftp2.InvalidPrefixErrorFormat, "I", cmd)
 	} else if string(c[18]) != oftp2.CarriageReturn {
 		return fmt.Errorf(oftp2.InvalidSuffixErrorFormat, c[18])
 	}
 	return nil
 }
 
-func (c StartSessionReadyMessageCmd) Cmd() byte {
+func (c StartSessionReadyMessageCmd) Command() byte {
 	return c[0]
 }
 
-func (c StartSessionReadyMessageCmd) Msg() []byte {
+func (c StartSessionReadyMessageCmd) Message() []byte {
 	return c[1:18]
 }
 
