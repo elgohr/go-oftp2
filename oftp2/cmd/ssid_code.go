@@ -3,7 +3,6 @@ package oftp2
 import (
 	"bifroest/oftp2"
 	"fmt"
-	"strconv"
 )
 
 // o-------------------------------------------------------------------o
@@ -20,31 +19,56 @@ import (
 type IdentificationCode []byte
 
 func (c IdentificationCode) Valid() error {
-	if len(c) != 25 {
-		return fmt.Errorf(oftp2.InvalidLengthErrorFormat, 25, len(c))
-	} else if _, err := strconv.ParseInt(string(c[1:5]), 10, 32); err != nil {
-		return fmt.Errorf("international code designator is not a number, but %v", string(c[1:3]))
+	if size := len(c); size != 25 {
+		return fmt.Errorf(oftp2.InvalidLengthErrorFormat, 25, size)
 	}
 	return nil
 }
 
-func (c IdentificationCode) Oid() byte {
+func (c IdentificationCode) OdetteIdentifier() byte {
 	return c[0]
 }
 
-func (c IdentificationCode) Icd() int {
-	i , _ := strconv.ParseInt(string(c[1:5]), 10, 32)
-	return int(i)
+func (c IdentificationCode) InternationalCodeDesignator() []byte {
+	return c[1:5]
 }
 
-func (c IdentificationCode) Org() []byte {
+func (c IdentificationCode) OrganisationCode() []byte {
 	return c[5:19]
 }
 
-func (c IdentificationCode) Csa() []byte {
+func (c IdentificationCode) ComputerSubaddress() []byte {
 	return c[19:25]
 }
 
-func SsidIdentificationCode(siooid string, sioicd int, sioorg string, siocsa string) IdentificationCode {
-	return IdentificationCode(siooid + strconv.Itoa(sioicd) + sioorg + siocsa)
+type SsidIdentificationCodeInput struct {
+	OdetteIdentifier            string
+	InternationalCodeDesignator string
+	OrganisationCode            string
+	ComputerSubaddress          string
+}
+
+func SsidIdentificationCode(input SsidIdentificationCodeInput) (IdentificationCode, error) {
+	oid, err := fillUpString(input.OdetteIdentifier, 1)
+	if err != nil {
+		return nil, err
+	}
+	intCode, err := fillUpString(input.InternationalCodeDesignator, 4)
+	if err != nil {
+		return nil, err
+	}
+	orgCode, err := fillUpString(input.OrganisationCode, 14)
+	if err != nil {
+		return nil, err
+	}
+	subAddr, err := fillUpString(input.ComputerSubaddress, 6)
+	if err != nil {
+		return nil, err
+	}
+	return IdentificationCode(
+		oid +
+			intCode +
+			orgCode +
+			subAddr,
+	), nil
 }

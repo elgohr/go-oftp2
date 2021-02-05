@@ -10,14 +10,14 @@ import (
 func TestStartSessionErrors(t *testing.T) {
 	for _, scenario := range []struct {
 		name   string
-		input  func() oftp2.StartSessionInput
+		input  func(t *testing.T) oftp2.StartSessionInput
 		expect func(t *testing.T, cmd cmd.Command, err error)
 	}{
 		{
 			name: "with a standard input",
-			input: func() oftp2.StartSessionInput {
+			input: func(t *testing.T) oftp2.StartSessionInput {
 				return oftp2.StartSessionInput{
-					IdentificationCode: validSsidIdCode,
+					IdentificationCode: validSsidCode(t),
 					DataExchangeBufferSize: 99999,
 					Capabilities: oftp2.CapabilityReceive,
 				}
@@ -29,7 +29,7 @@ func TestStartSessionErrors(t *testing.T) {
 		},
 		{
 			name: "with invalid ssid id code",
-			input: func() oftp2.StartSessionInput {
+			input: func(t *testing.T) oftp2.StartSessionInput {
 				return oftp2.StartSessionInput{
 					IdentificationCode: invalidSsidIdCode,
 				}
@@ -41,7 +41,7 @@ func TestStartSessionErrors(t *testing.T) {
 		},
 		{
 			name: "with invalid ssid id code",
-			input: func() oftp2.StartSessionInput {
+			input: func(t *testing.T) oftp2.StartSessionInput {
 				return oftp2.StartSessionInput{
 					IdentificationCode: nil,
 				}
@@ -53,9 +53,9 @@ func TestStartSessionErrors(t *testing.T) {
 		},
 		{
 			name: "with invalid password",
-			input: func() oftp2.StartSessionInput {
+			input: func(t *testing.T) oftp2.StartSessionInput {
 				return oftp2.StartSessionInput{
-					IdentificationCode: validSsidIdCode,
+					IdentificationCode: validSsidCode(t),
 					Password: "WAY_TOO_LONG_RIGHT?",
 				}
 			},
@@ -66,9 +66,9 @@ func TestStartSessionErrors(t *testing.T) {
 		},
 		{
 			name: "with invalid data exchange buffer",
-			input: func() oftp2.StartSessionInput {
+			input: func(t *testing.T) oftp2.StartSessionInput {
 				return oftp2.StartSessionInput{
-					IdentificationCode: validSsidIdCode,
+					IdentificationCode: validSsidCode(t),
 					Password: "PASSWORD",
 					DataExchangeBufferSize: 100000,
 				}
@@ -80,9 +80,9 @@ func TestStartSessionErrors(t *testing.T) {
 		},
 		{
 			name: "with invalid credit",
-			input: func() oftp2.StartSessionInput {
+			input: func(t *testing.T) oftp2.StartSessionInput {
 				return oftp2.StartSessionInput{
-					IdentificationCode: validSsidIdCode,
+					IdentificationCode: validSsidCode(t),
 					Password: "PASSWORD",
 					Capabilities: oftp2.CapabilityBoth,
 					DataExchangeBufferSize: 99999,
@@ -96,9 +96,9 @@ func TestStartSessionErrors(t *testing.T) {
 		},
 		{
 			name: "with invalid user data",
-			input: func() oftp2.StartSessionInput {
+			input: func(t *testing.T) oftp2.StartSessionInput {
 				return oftp2.StartSessionInput{
-					IdentificationCode: validSsidIdCode,
+					IdentificationCode: validSsidCode(t),
 					Password: "PASSWORD",
 					Capabilities: oftp2.CapabilityReceive,
 					DataExchangeBufferSize: 99999,
@@ -113,9 +113,9 @@ func TestStartSessionErrors(t *testing.T) {
 		},
 		{
 			name: "with invalid capabilities",
-			input: func() oftp2.StartSessionInput {
+			input: func(t *testing.T) oftp2.StartSessionInput {
 				return oftp2.StartSessionInput{
-					IdentificationCode: validSsidIdCode,
+					IdentificationCode: validSsidCode(t),
 					Password: "PASSWORD",
 					DataExchangeBufferSize: 99999,
 					Capabilities: "T",
@@ -128,7 +128,7 @@ func TestStartSessionErrors(t *testing.T) {
 		},
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
-			session, err := oftp2.StartSession(scenario.input())
+			session, err := oftp2.StartSession(scenario.input(t))
 			scenario.expect(t, session, err)
 		})
 	}
@@ -143,7 +143,7 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 		{
 			name: "with a standard message",
 			input: func(t *testing.T) []byte {
-				return validSession(t)
+				return validSessionStart(t)
 			},
 			expect: func(t *testing.T, ssid oftp2.StartSessionCmd) {
 				require.Equal(t, "X", string(ssid.Command()))
@@ -164,7 +164,7 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 		{
 			name: "with a wrong command",
 			input: func(t *testing.T) []byte {
-				session := validSession(t)
+				session := validSessionStart(t)
 				session[0] = 'Y'
 				return session
 			},
@@ -177,7 +177,7 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 		{
 			name: "with different protocol level",
 			input: func(t *testing.T) []byte {
-				session := validSession(t)
+				session := validSessionStart(t)
 				session[1] = '3'
 				return session
 			},
@@ -187,22 +187,9 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 			},
 		},
 		{
-			name: "with invalid ssid code",
-			input: func(t *testing.T) []byte {
-				session := validSession(t)
-				session[4] = ')'
-				return session
-			},
-			expect: func(t *testing.T, ssid oftp2.StartSessionCmd) {
-				require.Error(t, ssid.Valid()) // error from ssid code
-				require.Equal(t, "X", string(ssid.Command()))
-				require.Equal(t, "5", string(ssid.ProtocolLevel()))
-			},
-		},
-		{
 			name: "with invalid data exchange buffer size",
 			input: func(t *testing.T) []byte {
-				session := validSession(t)
+				session := validSessionStart(t)
 				session[36] = ' '
 				return session
 			},
@@ -214,7 +201,18 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 		{
 			name: "with data exchange buffer size at lower end",
 			input: func(t *testing.T) []byte {
-				input := validSsidInput
+				input := oftp2.StartSessionInput{
+					IdentificationCode:     validSsidCode(t),
+					Password:               "password",
+					DataExchangeBufferSize: 99999,
+					Capabilities:           oftp2.CapabilityBoth,
+					BufferCompression:      true,
+					Restart:                true,
+					SpecialLogic:           true,
+					Credit:                 999,
+					SecureAuthentication:   true,
+					UserData:               "        ",
+				}
 				input.DataExchangeBufferSize = 128
 				session, err := oftp2.StartSession(input)
 				require.NoError(t, err)
@@ -228,7 +226,18 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 		{
 			name: "with data exchange buffer size below lower end",
 			input: func(t *testing.T) []byte {
-				input := validSsidInput
+				input := oftp2.StartSessionInput{
+					IdentificationCode:     validSsidCode(t),
+					Password:               "password",
+					DataExchangeBufferSize: 99999,
+					Capabilities:           oftp2.CapabilityBoth,
+					BufferCompression:      true,
+					Restart:                true,
+					SpecialLogic:           true,
+					Credit:                 999,
+					SecureAuthentication:   true,
+					UserData:               "        ",
+				}
 				input.DataExchangeBufferSize = 127
 				session, err := oftp2.StartSession(input)
 				require.NoError(t, err)
@@ -241,7 +250,18 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 		{
 			name: "with data exchange buffer size at upper end",
 			input: func(t *testing.T) []byte {
-				input := validSsidInput
+				input := oftp2.StartSessionInput{
+					IdentificationCode:     validSsidCode(t),
+					Password:               "password",
+					DataExchangeBufferSize: 99999,
+					Capabilities:           oftp2.CapabilityBoth,
+					BufferCompression:      true,
+					Restart:                true,
+					SpecialLogic:           true,
+					Credit:                 999,
+					SecureAuthentication:   true,
+					UserData:               "        ",
+				}
 				input.DataExchangeBufferSize = 99999
 				session, err := oftp2.StartSession(input)
 				require.NoError(t, err)
@@ -255,7 +275,7 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 		{
 			name: "with unknown capability",
 			input: func(t *testing.T) []byte {
-				session := validSession(t)
+				session := validSessionStart(t)
 				session[40] = 'U'
 				return session
 			},
@@ -266,7 +286,7 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 		{
 			name: "with unknown compression indicator",
 			input: func(t *testing.T) []byte {
-				session := validSession(t)
+				session := validSessionStart(t)
 				session[41] = 'U'
 				return session
 			},
@@ -277,7 +297,7 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 		{
 			name: "with unknown restart indicator",
 			input: func(t *testing.T) []byte {
-				session := validSession(t)
+				session := validSessionStart(t)
 				session[42] = 'U'
 				return session
 			},
@@ -288,7 +308,7 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 		{
 			name: "with unknown special logic indicator",
 			input: func(t *testing.T) []byte {
-				session := validSession(t)
+				session := validSessionStart(t)
 				session[43] = 'U'
 				return session
 			},
@@ -299,7 +319,7 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 		{
 			name: "with invalid credit",
 			input: func(t *testing.T) []byte {
-				session := validSession(t)
+				session := validSessionStart(t)
 				session[45] = 'U'
 				return session
 			},
@@ -310,7 +330,7 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 		{
 			name: "with negative credit",
 			input: func(t *testing.T) []byte {
-				session := validSession(t)
+				session := validSessionStart(t)
 				session[44] = '-'
 				return session
 			},
@@ -321,7 +341,7 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 		{
 			name: "with unknown authentication",
 			input: func(t *testing.T) []byte {
-				session := validSession(t)
+				session := validSessionStart(t)
 				session[47] = 'U'
 				return session
 			},
@@ -336,12 +356,9 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 	}
 }
 
-var (
-	validSsidIdCode   = oftp2.SsidIdentificationCode("X", 1234, "ORG           ", "abcdef")
-	invalidSsidIdCode = oftp2.SsidIdentificationCode("XA", 1234, "ORG           ", "abcdef")
-
-	validSsidInput = oftp2.StartSessionInput{
-		IdentificationCode:     validSsidIdCode,
+func validSessionStart(t *testing.T) cmd.Command {
+	session, err := oftp2.StartSession(oftp2.StartSessionInput{
+		IdentificationCode:     validSsidCode(t),
 		Password:               "password",
 		DataExchangeBufferSize: 99999,
 		Capabilities:           oftp2.CapabilityBoth,
@@ -351,11 +368,7 @@ var (
 		Credit:                 999,
 		SecureAuthentication:   true,
 		UserData:               "        ",
-	}
-)
-
-func validSession(t *testing.T) cmd.Command {
-	session, err := oftp2.StartSession(validSsidInput)
+	})
 	require.NoError(t, err)
 	return session
 }
