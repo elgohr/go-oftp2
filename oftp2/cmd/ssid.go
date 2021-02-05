@@ -2,6 +2,7 @@ package oftp2
 
 import (
 	"bifroest/oftp2"
+	"errors"
 	"fmt"
 	"strconv"
 )
@@ -34,57 +35,80 @@ import (
 type StartSessionCmd []byte
 
 func (c StartSessionCmd) Valid() error {
-	if string(c[0]) != "X" {
-		return fmt.Errorf(oftp2.InvalidPrefixErrorFormat, "X", c[0])
-	} else if err := c.Code().Valid(); err != nil {
+	if size := len(c); size != 57 {
+		return fmt.Errorf("invalid size: %d", size)
+	} else if cmd := c.Command(); cmd != 'X' {
+		return fmt.Errorf(oftp2.InvalidPrefixErrorFormat, "X", cmd)
+	} else if err := c.IdentificationCode().Valid(); err != nil {
 		return err
+	} else if level := c.ProtocolLevel(); level != '5' {
+		return fmt.Errorf("invalid protocol level: %d", level)
+	} else if de, err := strconv.Atoi(string(c[35:40])); err != nil {
+		return fmt.Errorf("invalid DataExchangeBufferSize: %w", err)
+	} else if de < 128 || de > 99999 {
+		return fmt.Errorf("invalid DataExchangeBufferSize: %d", de)
+	} else if ca := c.Capabilities(); !isCapability(ca) {
+		return fmt.Errorf("unknown capability: %s", ca)
+	} else if bc := string(c[41]); !isBool(bc) {
+		return fmt.Errorf("unknown BufferCompressionIndicator: %s", bc)
+	} else if ri := string(c[42]); !isBool(ri) {
+		return fmt.Errorf("unknown RestartIndicator: %s", ri)
+	} else if sli := string(c[43]); !isBool(sli) {
+		return fmt.Errorf("unknown SpecialLogicIndicator: %s", sli)
+	} else if cred, err := strconv.Atoi(string(c[44:47])); err != nil {
+		return fmt.Errorf("invalid Credit: %w", err)
+	} else if cred < 0 || cred > 999 {
+		return fmt.Errorf("invalid Credit: %d", cred)
+	}else if auth := string(c[47]); !isBool(auth) {
+		return fmt.Errorf("unknown Authentication: %s", auth)
 	}
+
 	return nil
 }
 
-func (c StartSessionCmd) Cmd() byte {
+func (c StartSessionCmd) Command() byte {
 	return c[0]
 }
 
-func (c StartSessionCmd) Lev() byte {
+func (c StartSessionCmd) ProtocolLevel() byte {
 	return c[1]
 }
 
-func (c StartSessionCmd) Code() IdentificationCode {
+func (c StartSessionCmd) IdentificationCode() IdentificationCode {
 	return IdentificationCode(c[2:27])
 }
 
-func (c StartSessionCmd) Pswd() []byte {
+func (c StartSessionCmd) Password() []byte {
 	return c[27:35]
 }
 
-func (c StartSessionCmd) Sdeb() int {
+func (c StartSessionCmd) DataExchangeBufferSize() int {
 	i, _ := strconv.Atoi(string(c[35:40]))
 	return i
 }
 
-func (c StartSessionCmd) Dsr() byte {
-	return c[40]
+func (c StartSessionCmd) Capabilities() SsidCapability {
+	return SsidCapability(c[40])
 }
 
-func (c StartSessionCmd) Cmpr() bool {
+func (c StartSessionCmd) BufferCompression() bool {
 	return c[41] == 'Y'
 }
 
-func (c StartSessionCmd) Rest() bool {
+func (c StartSessionCmd) Restart() bool {
 	return c[42] == 'Y'
 }
 
-func (c StartSessionCmd) Spec() bool {
+func (c StartSessionCmd) SpecialLogic() bool {
 	return c[43] == 'Y'
 }
 
-func (c StartSessionCmd) Cred() int {
+func (c StartSessionCmd) Credit() int {
 	i, _ := strconv.Atoi(string(c[44:47]))
 	return i
 }
 
-func (c StartSessionCmd) Auth() bool {
+func (c StartSessionCmd) Authentication() bool {
 	return c[47] == 'Y'
 }
 
@@ -92,32 +116,116 @@ func (c StartSessionCmd) User() []byte {
 	return c[48:56]
 }
 
-func StartSession(identification IdentificationCode, password string) oftp2.Command {
-	id := string(identification)
-	return oftp2.Command(ssidCmd +
-		ssidLev +
-		id +
-		password +
-		ssidDeb +
-		ssidDsr +
-		ssidCmpr +
-		ssidRest +
-		ssidSpec +
-		ssidCred +
-		ssidAuth +
-		ssidUser +
-		oftp2.CarriageReturn)
+type SsidCapability string
+
+const (
+	CapabilitySend    SsidCapability = "S"
+	CapabilityReceive SsidCapability = "R"
+	CapabilityBoth    SsidCapability = "B"
+)
+
+type StartSessionInput struct {
+	IdentificationCode     IdentificationCode
+	Password               string
+	DataExchangeBufferSize int
+	Capabilities           SsidCapability
+	BufferCompression      bool
+	Restart                bool
+	SpecialLogic           bool
+	Credit                 int
+	SecureAuthentication   bool
+	UserData               string
 }
 
 const (
-	ssidCmd  = "X"
-	ssidLev  = "5"
-	ssidDeb  = "99999"
-	ssidDsr  = "B"
-	ssidCmpr = "Y"
-	ssidRest = "Y"
-	ssidSpec = "Y"
-	ssidCred = "999"
-	ssidAuth = "Y"
-	ssidUser = "        "
+	ssidCmd = "X" // Command Id
+	ssidLev = "5" // OFTP-2
 )
+
+func StartSession(input StartSessionInput) (oftp2.Command, error) {
+	if input.IdentificationCode == nil {
+		return nil, errors.New("missing identification code")
+	}
+
+	if err := input.IdentificationCode.Valid(); err != nil {
+		return nil, err
+	}
+
+	password, err := fillUpString(input.Password, 8)
+	if err != nil {
+		return nil, err
+	}
+
+	bufferSize, err := fillUpInt(input.DataExchangeBufferSize, 5)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isCapability(input.Capabilities) {
+		return nil, fmt.Errorf("unknown capability: %s", input.Capabilities)
+	}
+
+	credit, err := fillUpInt(input.Credit, 3)
+	if err != nil {
+		return nil, err
+	}
+
+	userData, err := fillUpString(input.UserData, 8)
+	if err != nil {
+		return nil, err
+	}
+
+	return oftp2.Command(ssidCmd +
+		ssidLev +
+		string(input.IdentificationCode) +
+		password +
+		bufferSize +
+		string(input.Capabilities) +
+		boolToString(input.BufferCompression) +
+		boolToString(input.Restart) +
+		boolToString(input.SpecialLogic) +
+		credit +
+		boolToString(input.SecureAuthentication) +
+		userData +
+		oftp2.CarriageReturn), nil
+}
+
+func isBool(input string) bool {
+	return input == "Y" || input == "N"
+}
+
+func isCapability(input SsidCapability) bool {
+	return input == CapabilitySend ||
+		input == CapabilityReceive ||
+		input == CapabilityBoth
+}
+
+func fillUpString(in string, desiredSize int) (string, error) {
+	lenIn := len(in)
+	if lenIn > desiredSize {
+		return in, fmt.Errorf("exceeded capacity: %s (%d)", in, desiredSize)
+	}
+	for i := lenIn; i < desiredSize; i++ {
+		in = " " + in
+	}
+	return in, nil
+}
+
+func fillUpInt(in int, desiredSize int) (string, error) {
+	result := strconv.Itoa(in)
+	lenIn := len(result)
+	if lenIn > desiredSize {
+		return result, fmt.Errorf("exceeded capacity: %d (%d)", in, desiredSize)
+	}
+	for i := lenIn; i < desiredSize; i++ {
+		result = "0" + result
+	}
+	return result, nil
+}
+
+func boolToString(input bool) string {
+	if input {
+		return "Y"
+	}
+	return "N"
+}
