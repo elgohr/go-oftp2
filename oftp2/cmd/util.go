@@ -10,26 +10,17 @@ func isBool(input string) bool {
 }
 
 func fillUpString(in string, desiredSize int) (string, error) {
-	lenIn := len(in)
-	if lenIn > desiredSize {
+	if len(in) > desiredSize {
 		return in, fmt.Errorf("exceeded capacity: %s (%d)", in, desiredSize)
 	}
-	for i := lenIn; i < desiredSize; i++ {
-		in = " " + in
-	}
-	return in, nil
+	return fmt.Sprintf("%"+strconv.Itoa(desiredSize)+"s", in), nil
 }
 
 func fillUpInt(in int, desiredSize int) (string, error) {
-	result := strconv.Itoa(in)
-	lenIn := len(result)
-	if lenIn > desiredSize {
+	if result := strconv.Itoa(in); len(result) > desiredSize {
 		return result, fmt.Errorf("exceeded capacity: %d (%d)", in, desiredSize)
 	}
-	for i := lenIn; i < desiredSize; i++ {
-		result = "0" + result
-	}
-	return result, nil
+	return fmt.Sprintf("%0"+strconv.Itoa(desiredSize)+"d", in), nil
 }
 
 func boolToString(input bool) string {
