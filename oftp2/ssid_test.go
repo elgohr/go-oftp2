@@ -357,6 +357,16 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 				require.EqualError(t, ssid.Valid(), `does not end on carriage return, but on y`)
 			},
 		},
+		{
+			name: "with exceeding message",
+			input: func(t *testing.T) []byte {
+				session := validSessionStart(t)
+				return append(session, ' ')
+			},
+			expect: func(t *testing.T, ssid oftp2.StartSessionCmd) {
+				require.EqualError(t, ssid.Valid(), `invalid size: 58`)
+			},
+		},
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
 			scenario.expect(t, scenario.input(t))

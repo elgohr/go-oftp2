@@ -47,6 +47,12 @@ func TestCommandCmd(t *testing.T) {
 		},
 		{
 			cmd: func(t *testing.T) oftp2.Command {
+				return validStartFileNegative(t)
+			},
+			expectedCmd: oftp2.StartFileNegativeMessage,
+		},
+		{
+			cmd: func(t *testing.T) oftp2.Command {
 				return []byte{}
 			},
 			expectedCmd: oftp2.Unknown,

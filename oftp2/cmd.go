@@ -23,13 +23,15 @@ const (
 	StartSessionReadyMessage Cmd = 'I'
 	StartSessionMessage      Cmd = 'X'
 	StartFilePositiveMessage Cmd = '2'
+	StartFileNegativeMessage Cmd = '3'
 	Unknown                  Cmd = '0'
 )
 
 var KnownCommands = map[Cmd]struct{}{
 	StartSessionReadyMessage: {},
 	StartSessionMessage:      {},
-	StartFilePositiveMessage:         {},
+	StartFilePositiveMessage: {},
+	StartFileNegativeMessage: {},
 }
 
 func (c Command) Cmd() Cmd {

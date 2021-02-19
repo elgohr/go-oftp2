@@ -46,6 +46,17 @@ func TestStartSessionReadyMessage(t *testing.T) {
 				require.Equal(t, "ODETTE FTP READY ", string(ssrm.Message()))
 			},
 		},
+		{
+			name: "with an exceeding message",
+			input: func() []byte {
+				m := oftp2.NewStartSessionReadyMessage()
+				return append(m, ' ')
+			},
+			expect: func(t *testing.T, ssrm oftp2.StartSessionReadyMessageCmd) {
+				require.EqualError(t, ssrm.Valid(), "expected the length of 19, but got 20")
+				require.Equal(t, "ODETTE FTP READY ", string(ssrm.Message()))
+			},
+		},
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
 			scenario.expect(t, scenario.input())

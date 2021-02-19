@@ -28,6 +28,14 @@ func TestStartFilePositiveAnswer(t *testing.T) {
 				require.Nil(t, cmd)
 			},
 		},
+		{
+			name:  "with a exceeding input",
+			input: 100000000000000000,
+			expect: func(t *testing.T, cmd oftp2.Command, err error) {
+				require.Error(t, err)
+				require.Nil(t, cmd)
+			},
+		},
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
 			session, err := oftp2.NewStartFilePositiveAnswer(scenario.input)
