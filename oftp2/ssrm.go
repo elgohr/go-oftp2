@@ -18,11 +18,6 @@ import (
 //
 // https://tools.ietf.org/html/rfc5024#section-5.3.1
 
-const (
-	ssrmCmd = "I"
-	ssrmMsg = "ODETTE FTP READY "
-)
-
 type StartSessionReadyMessageCmd []byte
 
 func (c StartSessionReadyMessageCmd) Valid() error {
@@ -41,5 +36,5 @@ func (c StartSessionReadyMessageCmd) Message() []byte {
 }
 
 func NewStartSessionReadyMessage() Command {
-	return Command(ssrmCmd + ssrmMsg + CarriageReturn)
+	return Command(string(StartSessionReadyMessage) + "ODETTE FTP READY " + CarriageReturn)
 }

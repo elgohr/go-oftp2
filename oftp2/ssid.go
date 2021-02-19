@@ -58,7 +58,7 @@ func (c StartSessionCmd) Valid() error {
 		return fmt.Errorf("invalid Credit: %w", err)
 	} else if cred < 0 || cred > 999 {
 		return fmt.Errorf("invalid Credit: %d", cred)
-	}else if auth := string(c[47]); !isBool(auth) {
+	} else if auth := string(c[47]); !isBool(auth) {
 		return fmt.Errorf("unknown Authentication: %s", auth)
 	}
 
@@ -136,11 +136,6 @@ type StartSessionInput struct {
 	UserData               string
 }
 
-const (
-	ssidCmd = "X" // Command Id
-	ssidLev = "5" // OFTP-2
-)
-
 func NewStartSession(input StartSessionInput) (Command, error) {
 	if input.IdentificationCode == nil {
 		return nil, errors.New("missing identification code")
@@ -174,8 +169,8 @@ func NewStartSession(input StartSessionInput) (Command, error) {
 		return nil, err
 	}
 
-	return Command(ssidCmd +
-		ssidLev +
+	return Command(string(StartSessionMessage) +
+		"5" + // OFTP-2
 		string(input.IdentificationCode) +
 		password +
 		bufferSize +
