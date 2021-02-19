@@ -145,7 +145,6 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 				return validSessionStart(t)
 			},
 			expect: func(t *testing.T, ssid oftp2.StartSessionCmd) {
-				require.Equal(t, "X", string(ssid.Command()))
 				require.Equal(t, "5", string(ssid.ProtocolLevel()))
 				c := ssid.IdentificationCode()
 				require.NoError(t, c.Valid())
@@ -169,7 +168,6 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 			},
 			expect: func(t *testing.T, ssid oftp2.StartSessionCmd) {
 				require.Error(t, ssid.Valid())
-				require.Equal(t, "Y", string(ssid.Command()))
 				require.Equal(t, "5", string(ssid.ProtocolLevel()))
 			},
 		},
@@ -346,6 +344,17 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 			},
 			expect: func(t *testing.T, ssid oftp2.StartSessionCmd) {
 				require.EqualError(t, ssid.Valid(), `unknown Authentication: U`)
+			},
+		},
+		{
+			name: "with missing CarriageReturn",
+			input: func(t *testing.T) []byte {
+				session := validSessionStart(t)
+				session[56] = 'y'
+				return session
+			},
+			expect: func(t *testing.T, ssid oftp2.StartSessionCmd) {
+				require.EqualError(t, ssid.Valid(), `does not end on carriage return, but on y`)
 			},
 		},
 	} {

@@ -22,15 +22,20 @@ type Cmd byte
 const (
 	StartSessionReadyMessage Cmd = 'I'
 	StartSessionMessage      Cmd = 'X'
+	StartFilePositiveMessage Cmd = '2'
 	Unknown                  Cmd = '0'
 )
 
 var KnownCommands = map[Cmd]struct{}{
 	StartSessionReadyMessage: {},
 	StartSessionMessage:      {},
+	StartFilePositiveMessage:         {},
 }
 
 func (c Command) Cmd() Cmd {
+	if len(c) == 0 {
+		return Unknown
+	}
 	if _, exists := KnownCommands[Cmd(c[0])]; !exists {
 		return Unknown
 	}

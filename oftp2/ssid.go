@@ -36,8 +36,10 @@ type StartSessionCmd []byte
 func (c StartSessionCmd) Valid() error {
 	if size := len(c); size != 57 {
 		return fmt.Errorf("invalid size: %d", size)
-	} else if cmd := c.Command(); cmd != 'X' {
+	} else if cmd := c[0]; cmd != 'X' {
 		return fmt.Errorf(InvalidPrefixErrorFormat, "X", cmd)
+	}else if cmd := string(c[56]); cmd != CarriageReturn {
+		return fmt.Errorf(InvalidSuffixErrorFormat, cmd)
 	} else if err := c.IdentificationCode().Valid(); err != nil {
 		return err
 	} else if level := c.ProtocolLevel(); level != '5' {
@@ -63,10 +65,6 @@ func (c StartSessionCmd) Valid() error {
 	}
 
 	return nil
-}
-
-func (c StartSessionCmd) Command() byte {
-	return c[0]
 }
 
 func (c StartSessionCmd) ProtocolLevel() byte {
