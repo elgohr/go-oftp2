@@ -12,33 +12,43 @@ func TestNewStreamTransmissionHeader(t *testing.T) {
 		expectedHeader []byte
 	}{
 		{
-			cmd:            oftp2.Command("IODETTE FTP READY " + oftp2.CarriageReturn),
+			cmd:            oftp2.NewStartSessionReadyMessage(),
 			expectedHeader: []byte{0x10, 0x00, 0x00, 0x17},
 		},
-		//{
-		//	bufferLength:   41,
-		//	expectedHeader: []byte{0x10, 0x00, 0x00, 0x41},
-		//},
-		//{
-		//	bufferLength:  4,
-		//	expectedError: errors.New("wrong buffer length (4)"),
-		//},
-		//{
-		//	bufferLength:   1003,
-		//	expectedHeader: []byte{0x10, 0x00, 0x10, 0x03},
-		//},
-		//{
-		//	bufferLength:   100003,
-		//	expectedHeader: []byte{0x10, 0x10, 0x00, 0x03},
-		//},
-		//{
-		//	bufferLength:  100004,
-		//	expectedError: errors.New("wrong buffer length (100004)"),
-		//},
 	} {
 		t.Run(string(scenario.cmd), func(t *testing.T) {
 			require.Equal(t, scenario.expectedHeader, scenario.cmd.StreamTransmissionBuffer()[:4])
 		})
 	}
+}
 
+func TestCommandCmd(t *testing.T) {
+	for _, scenario := range []struct {
+		cmd         func(t *testing.T) oftp2.Command
+		expectedCmd oftp2.Cmd
+	}{
+		{
+			cmd: func(t *testing.T) oftp2.Command {
+				return oftp2.NewStartSessionReadyMessage()
+			},
+			expectedCmd: oftp2.StartSessionReadyMessage,
+		},
+		{
+			cmd: func(t *testing.T) oftp2.Command {
+				return validSessionStart(t)
+			},
+			expectedCmd: oftp2.StartSessionMessage,
+		},
+		{
+			cmd: func(t *testing.T) oftp2.Command {
+				return []byte("-")
+			},
+			expectedCmd: oftp2.Unknown,
+		},
+	} {
+		t.Run(string(scenario.expectedCmd), func(t *testing.T) {
+			cmd := scenario.cmd(t).Cmd()
+			require.Equal(t, scenario.expectedCmd, cmd, string(cmd))
+		})
+	}
 }

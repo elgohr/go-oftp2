@@ -1,7 +1,7 @@
 package main
 
 import (
-	oftp2 "bifroest/oftp2/cmd"
+	oftp22 "bifroest/oftp2"
 	"bufio"
 	"fmt"
 	"log"
@@ -16,11 +16,11 @@ type Listener struct {
 }
 
 func NewListener(c <-chan os.Signal) (*Listener, error) {
-	localAddress, err := net.ResolveTCPAddr("server", "0.0.0.0:3305")
+	localAddress, err := net.ResolveTCPAddr("tcp", "0.0.0.0:3305")
 	if err != nil {
 		return nil, err
 	}
-	listener, err := net.ListenTCP("server", localAddress)
+	listener, err := net.ListenTCP("tcp", localAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (p *Listener) handle(connection *net.TCPConn) {
 	for {
 		if _, exists := p.connections[connection.RemoteAddr().String()]; !exists {
 			fmt.Printf("Serving %s\n", connection.RemoteAddr().String())
-			if _, err := connection.Write(oftp2.StartSessionReadyMessage().StreamTransmissionBuffer()); err != nil {
+			if _, err := connection.Write(oftp22.NewStartSessionReadyMessage().StreamTransmissionBuffer()); err != nil {
 				log.Println(err)
 				return
 			}

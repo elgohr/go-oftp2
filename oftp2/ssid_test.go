@@ -1,8 +1,7 @@
 package oftp2_test
 
 import (
-	cmd "bifroest/oftp2"
-	oftp2 "bifroest/oftp2/cmd"
+	"bifroest/oftp2"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -11,18 +10,18 @@ func TestStartSessionErrors(t *testing.T) {
 	for _, scenario := range []struct {
 		name   string
 		input  func(t *testing.T) oftp2.StartSessionInput
-		expect func(t *testing.T, cmd cmd.Command, err error)
+		expect func(t *testing.T, cmd oftp2.Command, err error)
 	}{
 		{
 			name: "with a standard input",
 			input: func(t *testing.T) oftp2.StartSessionInput {
 				return oftp2.StartSessionInput{
-					IdentificationCode: validSsidCode(t),
+					IdentificationCode:     validSsidCode(t),
 					DataExchangeBufferSize: 99999,
-					Capabilities: oftp2.CapabilityReceive,
+					Capabilities:           oftp2.CapabilityReceive,
 				}
 			},
-			expect: func(t *testing.T, cmd cmd.Command, err error) {
+			expect: func(t *testing.T, cmd oftp2.Command, err error) {
 				require.NoError(t, err)
 				require.NotNil(t, cmd)
 			},
@@ -34,7 +33,7 @@ func TestStartSessionErrors(t *testing.T) {
 					IdentificationCode: invalidSsidIdCode,
 				}
 			},
-			expect: func(t *testing.T, cmd cmd.Command, err error) {
+			expect: func(t *testing.T, cmd oftp2.Command, err error) {
 				require.Error(t, err)
 				require.Nil(t, cmd)
 			},
@@ -46,7 +45,7 @@ func TestStartSessionErrors(t *testing.T) {
 					IdentificationCode: nil,
 				}
 			},
-			expect: func(t *testing.T, cmd cmd.Command, err error) {
+			expect: func(t *testing.T, cmd oftp2.Command, err error) {
 				require.EqualError(t, err, "missing identification code")
 				require.Nil(t, cmd)
 			},
@@ -56,10 +55,10 @@ func TestStartSessionErrors(t *testing.T) {
 			input: func(t *testing.T) oftp2.StartSessionInput {
 				return oftp2.StartSessionInput{
 					IdentificationCode: validSsidCode(t),
-					Password: "WAY_TOO_LONG_RIGHT?",
+					Password:           "WAY_TOO_LONG_RIGHT?",
 				}
 			},
-			expect: func(t *testing.T, cmd cmd.Command, err error) {
+			expect: func(t *testing.T, cmd oftp2.Command, err error) {
 				require.EqualError(t, err, "exceeded capacity: WAY_TOO_LONG_RIGHT? (8)")
 				require.Nil(t, cmd)
 			},
@@ -68,12 +67,12 @@ func TestStartSessionErrors(t *testing.T) {
 			name: "with invalid data exchange buffer",
 			input: func(t *testing.T) oftp2.StartSessionInput {
 				return oftp2.StartSessionInput{
-					IdentificationCode: validSsidCode(t),
-					Password: "PASSWORD",
+					IdentificationCode:     validSsidCode(t),
+					Password:               "PASSWORD",
 					DataExchangeBufferSize: 100000,
 				}
 			},
-			expect: func(t *testing.T, cmd cmd.Command, err error) {
+			expect: func(t *testing.T, cmd oftp2.Command, err error) {
 				require.EqualError(t, err, "exceeded capacity: 100000 (5)")
 				require.Nil(t, cmd)
 			},
@@ -82,14 +81,14 @@ func TestStartSessionErrors(t *testing.T) {
 			name: "with invalid credit",
 			input: func(t *testing.T) oftp2.StartSessionInput {
 				return oftp2.StartSessionInput{
-					IdentificationCode: validSsidCode(t),
-					Password: "PASSWORD",
-					Capabilities: oftp2.CapabilityBoth,
+					IdentificationCode:     validSsidCode(t),
+					Password:               "PASSWORD",
+					Capabilities:           oftp2.CapabilityBoth,
 					DataExchangeBufferSize: 99999,
-					Credit: 9999,
+					Credit:                 9999,
 				}
 			},
-			expect: func(t *testing.T, cmd cmd.Command, err error) {
+			expect: func(t *testing.T, cmd oftp2.Command, err error) {
 				require.EqualError(t, err, "exceeded capacity: 9999 (3)")
 				require.Nil(t, cmd)
 			},
@@ -98,15 +97,15 @@ func TestStartSessionErrors(t *testing.T) {
 			name: "with invalid user data",
 			input: func(t *testing.T) oftp2.StartSessionInput {
 				return oftp2.StartSessionInput{
-					IdentificationCode: validSsidCode(t),
-					Password: "PASSWORD",
-					Capabilities: oftp2.CapabilityReceive,
+					IdentificationCode:     validSsidCode(t),
+					Password:               "PASSWORD",
+					Capabilities:           oftp2.CapabilityReceive,
 					DataExchangeBufferSize: 99999,
-					Credit: 999,
-					UserData: "12345678910",
+					Credit:                 999,
+					UserData:               "12345678910",
 				}
 			},
-			expect: func(t *testing.T, cmd cmd.Command, err error) {
+			expect: func(t *testing.T, cmd oftp2.Command, err error) {
 				require.EqualError(t, err, "exceeded capacity: 12345678910 (8)")
 				require.Nil(t, cmd)
 			},
@@ -115,20 +114,20 @@ func TestStartSessionErrors(t *testing.T) {
 			name: "with invalid capabilities",
 			input: func(t *testing.T) oftp2.StartSessionInput {
 				return oftp2.StartSessionInput{
-					IdentificationCode: validSsidCode(t),
-					Password: "PASSWORD",
+					IdentificationCode:     validSsidCode(t),
+					Password:               "PASSWORD",
 					DataExchangeBufferSize: 99999,
-					Capabilities: "T",
+					Capabilities:           "T",
 				}
 			},
-			expect: func(t *testing.T, cmd cmd.Command, err error) {
+			expect: func(t *testing.T, cmd oftp2.Command, err error) {
 				require.EqualError(t, err, "unknown capability: T")
 				require.Nil(t, cmd)
 			},
 		},
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
-			session, err := oftp2.StartSession(scenario.input(t))
+			session, err := oftp2.NewStartSession(scenario.input(t))
 			scenario.expect(t, session, err)
 		})
 	}
@@ -214,7 +213,7 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 					UserData:               "        ",
 				}
 				input.DataExchangeBufferSize = 128
-				session, err := oftp2.StartSession(input)
+				session, err := oftp2.NewStartSession(input)
 				require.NoError(t, err)
 				return session
 			},
@@ -239,7 +238,7 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 					UserData:               "        ",
 				}
 				input.DataExchangeBufferSize = 127
-				session, err := oftp2.StartSession(input)
+				session, err := oftp2.NewStartSession(input)
 				require.NoError(t, err)
 				return session
 			},
@@ -263,7 +262,7 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 					UserData:               "        ",
 				}
 				input.DataExchangeBufferSize = 99999
-				session, err := oftp2.StartSession(input)
+				session, err := oftp2.NewStartSession(input)
 				require.NoError(t, err)
 				return session
 			},
@@ -356,8 +355,8 @@ func TestStartSessionCmd_Valid(t *testing.T) {
 	}
 }
 
-func validSessionStart(t *testing.T) cmd.Command {
-	session, err := oftp2.StartSession(oftp2.StartSessionInput{
+func validSessionStart(t *testing.T) oftp2.Command {
+	session, err := oftp2.NewStartSession(oftp2.StartSessionInput{
 		IdentificationCode:     validSsidCode(t),
 		Password:               "password",
 		DataExchangeBufferSize: 99999,

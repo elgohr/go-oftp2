@@ -16,9 +16,9 @@ func TestListener(t *testing.T) {
 	require.NoError(t, err)
 	go p.Listen()
 
-	addr, err := net.ResolveTCPAddr("server", "localhost:3305")
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:3305")
 	require.NoError(t, err)
-	conn, err := net.DialTCP("server", nil, addr)
+	conn, err := net.DialTCP("tcp", nil, addr)
 	require.NoError(t, err)
 
 	reader := bufio.NewReader(conn)

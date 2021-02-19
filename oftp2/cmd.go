@@ -17,6 +17,26 @@ func (c Command) StreamTransmissionBuffer() []byte {
 	return append(sth, c...)
 }
 
+type Cmd byte
+
+const (
+	StartSessionReadyMessage Cmd = 'I'
+	StartSessionMessage      Cmd = 'X'
+	Unknown                  Cmd = '0'
+)
+
+var KnownCommands = map[Cmd]struct{}{
+	StartSessionReadyMessage: {},
+	StartSessionMessage:      {},
+}
+
+func (c Command) Cmd() Cmd {
+	if _, exists := KnownCommands[Cmd(c[0])]; !exists {
+		return Unknown
+	}
+	return Cmd(c[0])
+}
+
 func intToHexBytes(i int32) []byte {
 	b := new(bytes.Buffer)
 	if err := binary.Write(b, binary.BigEndian, i); err != nil {

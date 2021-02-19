@@ -1,7 +1,6 @@
 package oftp2
 
 import (
-	"bifroest/oftp2"
 	"fmt"
 )
 
@@ -28,23 +27,19 @@ type StartSessionReadyMessageCmd []byte
 
 func (c StartSessionReadyMessageCmd) Valid() error {
 	if size := len(c); size != 19 {
-		return fmt.Errorf(oftp2.InvalidLengthErrorFormat, 19, size)
+		return fmt.Errorf(InvalidLengthErrorFormat, 19, size)
 	} else if cmd := string(c[0]); cmd != "I" {
-		return fmt.Errorf(oftp2.InvalidPrefixErrorFormat, "I", cmd)
-	} else if string(c[18]) != oftp2.CarriageReturn {
-		return fmt.Errorf(oftp2.InvalidSuffixErrorFormat, c[18])
+		return fmt.Errorf(InvalidPrefixErrorFormat, "I", cmd)
+	} else if string(c[18]) != CarriageReturn {
+		return fmt.Errorf(InvalidSuffixErrorFormat, c[18])
 	}
 	return nil
-}
-
-func (c StartSessionReadyMessageCmd) Command() byte {
-	return c[0]
 }
 
 func (c StartSessionReadyMessageCmd) Message() []byte {
 	return c[1:18]
 }
 
-func StartSessionReadyMessage() oftp2.Command {
-	return oftp2.Command(ssrmCmd + ssrmMsg + oftp2.CarriageReturn)
+func NewStartSessionReadyMessage() Command {
+	return Command(ssrmCmd + ssrmMsg + CarriageReturn)
 }

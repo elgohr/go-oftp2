@@ -1,7 +1,6 @@
 package oftp2
 
 import (
-	"bifroest/oftp2"
 	"fmt"
 )
 
@@ -20,7 +19,7 @@ type IdentificationCode []byte
 
 func (c IdentificationCode) Valid() error {
 	if size := len(c); size != 25 {
-		return fmt.Errorf(oftp2.InvalidLengthErrorFormat, 25, size)
+		return fmt.Errorf(InvalidLengthErrorFormat, 25, size)
 	}
 	return nil
 }

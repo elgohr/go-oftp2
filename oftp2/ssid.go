@@ -1,7 +1,6 @@
 package oftp2
 
 import (
-	"bifroest/oftp2"
 	"errors"
 	"fmt"
 	"strconv"
@@ -38,7 +37,7 @@ func (c StartSessionCmd) Valid() error {
 	if size := len(c); size != 57 {
 		return fmt.Errorf("invalid size: %d", size)
 	} else if cmd := c.Command(); cmd != 'X' {
-		return fmt.Errorf(oftp2.InvalidPrefixErrorFormat, "X", cmd)
+		return fmt.Errorf(InvalidPrefixErrorFormat, "X", cmd)
 	} else if err := c.IdentificationCode().Valid(); err != nil {
 		return err
 	} else if level := c.ProtocolLevel(); level != '5' {
@@ -142,7 +141,7 @@ const (
 	ssidLev = "5" // OFTP-2
 )
 
-func StartSession(input StartSessionInput) (oftp2.Command, error) {
+func NewStartSession(input StartSessionInput) (Command, error) {
 	if input.IdentificationCode == nil {
 		return nil, errors.New("missing identification code")
 	}
@@ -175,7 +174,7 @@ func StartSession(input StartSessionInput) (oftp2.Command, error) {
 		return nil, err
 	}
 
-	return oftp2.Command(ssidCmd +
+	return Command(ssidCmd +
 		ssidLev +
 		string(input.IdentificationCode) +
 		password +
@@ -187,7 +186,7 @@ func StartSession(input StartSessionInput) (oftp2.Command, error) {
 		credit +
 		boolToString(input.SecureAuthentication) +
 		userData +
-		oftp2.CarriageReturn), nil
+		CarriageReturn), nil
 }
 
 func isCapability(input SsidCapability) bool {
