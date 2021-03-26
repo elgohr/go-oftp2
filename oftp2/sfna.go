@@ -25,16 +25,22 @@ import (
 type StartFileNegativeAnswerCmd []byte
 
 func (c StartFileNegativeAnswerCmd) Valid() error {
-	if l := len(c); l != 19 {
-		return fmt.Errorf(InvalidLengthErrorFormat, 19, l)
-	} else if Cmd(c[0]) != StartFilePositiveMessage {
-		return fmt.Errorf(InvalidPrefixErrorFormat, string(StartFilePositiveMessage), string(c[0]))
-	} else if string(c[18]) != CarriageReturn {
-		return fmt.Errorf(InvalidSuffixErrorFormat, string(c[18]))
-	} else if val, err := strconv.Atoi(string(c[1:18])); err != nil {
+	fixLength := 8 // prefix + CR
+	variableLength, err := strconv.Atoi(string(c[4:7]))
+	if err != nil {
 		return err
-	} else if val < 0 {
-		return errors.New("answer count can't be negative")
+	}
+	totalLength := fixLength + variableLength
+	if l := len(c); l != totalLength {
+		return fmt.Errorf(InvalidLengthErrorFormat, totalLength, l)
+	} else if Cmd(c[0]) != StartFileNegativeMessage {
+		return fmt.Errorf(InvalidPrefixErrorFormat, string(StartFileNegativeMessage), string(c[0]))
+	} else if c.ReasonCode() == 0 {
+		return fmt.Errorf("invalid reason code")
+	}else if c[3] != 'Y' && c[3] != 'N' {
+		return fmt.Errorf("invalid retry")
+	}else if string(c[totalLength-1]) != CarriageReturn {
+		return fmt.Errorf(InvalidSuffixErrorFormat, string(c[totalLength-1]))
 	}
 	return nil
 }
@@ -49,7 +55,7 @@ func (c StartFileNegativeAnswerCmd) Retry() bool {
 }
 
 func (c StartFileNegativeAnswerCmd) ReasonText() []byte {
-	return c[8:len(c)-2]
+	return c[7:len(c)-1]
 }
 
 func NewStartFileNegativeAnswer(reason AnswerReason, retry bool, reasonText string) (Command, error) {
