@@ -25,7 +25,7 @@ func TestNewStreamTransmissionHeader(t *testing.T) {
 func TestCommandCmd(t *testing.T) {
 	for _, scenario := range []struct {
 		cmd         func(t *testing.T) oftp2.Command
-		expectedCmd oftp2.Cmd
+		expectedCmd oftp2.Id
 	}{
 		{
 			cmd: func(t *testing.T) oftp2.Command {

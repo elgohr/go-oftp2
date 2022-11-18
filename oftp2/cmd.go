@@ -17,35 +17,46 @@ func (c Command) StreamTransmissionBuffer() []byte {
 	return append(sth, c...)
 }
 
-type Cmd byte
+type Id byte
 
 const (
-	StartSessionReadyMessage Cmd = 'I'
-	StartSessionMessage      Cmd = 'X'
-	StartFilePositiveMessage Cmd = '2'
-	StartFileNegativeMessage Cmd = '3'
-	Unknown                  Cmd = '0'
+	StartSessionReadyMessage  Id = 'I'
+	StartSessionMessage       Id = 'X'
+	SidId                     Id = 'O'
+	StartFile                 Id = 'H'
+	StartFilePositiveMessage  Id = '2'
+	StartFileNegativeMessage  Id = '3'
+	DataExchangeBufferMessage Id = 'D'
+	Unknown                   Id = '0'
 )
 
-var KnownCommands = map[Cmd]struct{}{
+func (i Id) Byte() byte {
+	return byte(i)
+}
+
+func (i Id) String() string {
+	return string(i)
+}
+
+var KnownIds = map[Id]struct{}{
 	StartSessionReadyMessage: {},
 	StartSessionMessage:      {},
 	StartFilePositiveMessage: {},
 	StartFileNegativeMessage: {},
 }
 
-func (c Command) Cmd() Cmd {
+func (c Command) Cmd() Id {
 	if len(c) == 0 {
 		return Unknown
 	}
-	if _, exists := KnownCommands[Cmd(c[0])]; !exists {
+	if _, exists := KnownIds[Id(c[0])]; !exists {
 		return Unknown
 	}
-	return Cmd(c[0])
+	return Id(c[0])
 }
 
 func intToHexBytes(i int32) []byte {
-	b := new(bytes.Buffer)
+	b := &bytes.Buffer{}
 	if err := binary.Write(b, binary.BigEndian, i); err != nil {
 		log.Println(err)
 		return nil

@@ -1,9 +1,5 @@
 package oftp2
 
-import (
-	"fmt"
-)
-
 // o-------------------------------------------------------------------o
 // |       SSRM        Start Session Ready Message                     |
 // |                                                                   |
@@ -22,11 +18,11 @@ type StartSessionReadyMessageCmd []byte
 
 func (c StartSessionReadyMessageCmd) Valid() error {
 	if size := len(c); size != 19 {
-		return fmt.Errorf(InvalidLengthErrorFormat, 19, size)
-	} else if cmd := string(c[0]); cmd != "I" {
-		return fmt.Errorf(InvalidPrefixErrorFormat, "I", cmd)
-	} else if string(c[18]) != CarriageReturn {
-		return fmt.Errorf(InvalidSuffixErrorFormat, c[18])
+		return NewInvalidLengthError(19, size)
+	} else if StartSessionReadyMessage.Byte() != c[0] {
+		return NewInvalidPrefixError(StartSessionReadyMessage.String(), string(c[0]))
+	} else if cmd := string(c[18]); cmd != CarriageReturn {
+		return NewNoCrSuffixError(cmd)
 	}
 	return nil
 }

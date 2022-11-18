@@ -8,12 +8,12 @@ import (
 
 func TestIdentificationCode(t *testing.T) {
 	for _, scenario := range []struct {
-		name   string
-		input  func() oftp2.SsidIdentificationCodeInput
+		with  string
+		input func() oftp2.SsidIdentificationCodeInput
 		expect func(t *testing.T, code oftp2.IdentificationCode, err error)
 	}{
 		{
-			name: "with a standard message",
+			with: "a standard message",
 			input: func() oftp2.SsidIdentificationCodeInput {
 				return validSsidIdCodeInput
 			},
@@ -23,7 +23,7 @@ func TestIdentificationCode(t *testing.T) {
 			},
 		},
 		{
-			name: "with expanding odette Id",
+			with: "expanding odette Id",
 			input: func() oftp2.SsidIdentificationCodeInput {
 				in := validSsidIdCodeInput
 				in.OdetteIdentifier = "LONG"
@@ -35,7 +35,7 @@ func TestIdentificationCode(t *testing.T) {
 			},
 		},
 		{
-			name: "with expanding InternationalCodeDesignator",
+			with: "expanding InternationalCodeDesignator",
 			input: func() oftp2.SsidIdentificationCodeInput {
 				in := validSsidIdCodeInput
 				in.InternationalCodeDesignator = "12345"
@@ -47,7 +47,7 @@ func TestIdentificationCode(t *testing.T) {
 			},
 		},
 		{
-			name: "with expanding OrganisationCode",
+			with: "expanding OrganisationCode",
 			input: func() oftp2.SsidIdentificationCodeInput {
 				in := validSsidIdCodeInput
 				in.OrganisationCode = "123456712345678"
@@ -59,7 +59,7 @@ func TestIdentificationCode(t *testing.T) {
 			},
 		},
 		{
-			name: "with expanding ComputerSubaddress",
+			with: "expanding ComputerSubaddress",
 			input: func() oftp2.SsidIdentificationCodeInput {
 				in := validSsidIdCodeInput
 				in.ComputerSubaddress = "1234567"
@@ -71,7 +71,7 @@ func TestIdentificationCode(t *testing.T) {
 			},
 		},
 	} {
-		t.Run(scenario.name, func(t *testing.T) {
+		t.Run(scenario.with, func(t *testing.T) {
 			code, err := oftp2.SsidIdentificationCode(scenario.input())
 			scenario.expect(t, code, err)
 		})
@@ -80,12 +80,12 @@ func TestIdentificationCode(t *testing.T) {
 
 func TestIdentificationCode_Valid(t *testing.T) {
 	for _, scenario := range []struct {
-		name   string
-		input  func() oftp2.IdentificationCode
+		with  string
+		input func() oftp2.IdentificationCode
 		expect func(t *testing.T, code oftp2.IdentificationCode)
 	}{
 		{
-			name: "with a standard message",
+			with: "a standard message",
 			input: func() oftp2.IdentificationCode {
 				return validSsidCode(t)
 			},
@@ -98,7 +98,7 @@ func TestIdentificationCode_Valid(t *testing.T) {
 			},
 		},
 		{
-			name: "with expanding message",
+			with: "expanding message",
 			input: func() oftp2.IdentificationCode {
 				return []byte("THIS_MESSAGE_IS_WAY_TOO_LONG")
 			},
@@ -107,7 +107,7 @@ func TestIdentificationCode_Valid(t *testing.T) {
 			},
 		},
 	} {
-		t.Run(scenario.name, func(t *testing.T) {
+		t.Run(scenario.with, func(t *testing.T) {
 			scenario.expect(t, scenario.input())
 		})
 	}

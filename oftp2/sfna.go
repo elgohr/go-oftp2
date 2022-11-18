@@ -1,7 +1,6 @@
 package oftp2
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 )
@@ -20,7 +19,7 @@ import (
 // |   7 | SFNAREAST | Answer Reason Text                    | V T(n)  |
 // o-------------------------------------------------------------------o
 //
-// https://tools.ietf.org/html/rfc5024#section-5.3.5
+// https://datatracker.ietf.org/doc/html/rfc5024#section-5.3.5
 
 type StartFileNegativeAnswerCmd []byte
 
@@ -31,16 +30,16 @@ func (c StartFileNegativeAnswerCmd) Valid() error {
 		return err
 	}
 	totalLength := fixLength + variableLength
-	if l := len(c); l != totalLength {
-		return fmt.Errorf(InvalidLengthErrorFormat, totalLength, l)
-	} else if Cmd(c[0]) != StartFileNegativeMessage {
-		return fmt.Errorf(InvalidPrefixErrorFormat, string(StartFileNegativeMessage), string(c[0]))
-	} else if c.ReasonCode() == 0 {
+	if length := len(c); length != totalLength {
+		return NewInvalidLengthError(totalLength, length)
+	} else if StartFileNegativeMessage.Byte() != c[0] {
+		return NewInvalidPrefixError(StartFileNegativeMessage.String(), string(c[0]))
+	} else if 0 == c.ReasonCode() {
 		return fmt.Errorf("invalid reason code")
-	}else if c[3] != 'Y' && c[3] != 'N' {
+	} else if c[3] != 'Y' && c[3] != 'N' {
 		return fmt.Errorf("invalid retry")
-	}else if string(c[totalLength-1]) != CarriageReturn {
-		return fmt.Errorf(InvalidSuffixErrorFormat, string(c[totalLength-1]))
+	} else if cmd := string(c[totalLength-1]); CarriageReturn != cmd {
+		return NewNoCrSuffixError(cmd)
 	}
 	return nil
 }
@@ -54,58 +53,58 @@ func (c StartFileNegativeAnswerCmd) Retry() bool {
 	return c[3] == 'Y'
 }
 
-func (c StartFileNegativeAnswerCmd) ReasonText() []byte {
-	return c[7:len(c)-1]
+func (c StartFileNegativeAnswerCmd) ReasonText() string {
+	return string(c[7 : len(c)-1])
 }
 
-func NewStartFileNegativeAnswer(reason AnswerReason, retry bool, reasonText string) (Command, error) {
-	if _, exists := KnownReasonCodes[reason]; !exists {
-		return nil, fmt.Errorf("unknown answer reason: %d", reason)
+func NewStartFileNegativeAnswer(input NegativeFileInput) (Command, error) {
+	if _, exists := KnownReasonCodes[input.Reason]; !exists {
+		return nil, fmt.Errorf("unknown answer reason: %d", input.Reason)
 	}
-	i := len(reasonText)
-	if i > 999 {
-		return nil, errors.New("reason text is too long")
+	length := len(input.ReasonText)
+	if length > 999 {
+		return nil, fmt.Errorf("reason text is too long: %d", length)
 	}
-	r, err := fillUpInt(int(reason), 2)
-	if err != nil {
-		return nil, err
-	}
+	r, _ := fillUpInt(int(input.Reason), 2)
+	l, _ := fillUpInt(length, 3)
 
-	l, err := fillUpInt(i, 3)
-	if err != nil {
-		return nil, err
-	}
 	return Command(
 		string(StartFileNegativeMessage) +
 			r +
-			boolToString(retry) +
+			boolToString(input.Retry) +
 			l +
-			reasonText +
+			input.ReasonText +
 			CarriageReturn,
 	), nil
+}
+
+type NegativeFileInput struct {
+	Reason     AnswerReason
+	Retry      bool
+	ReasonText string
 }
 
 type AnswerReason int
 
 var KnownReasonCodes = map[AnswerReason]struct{}{
-	AnswerInvalidFilename: {},
-	AnswerInvalidDestination: {},
-	AnswerInvalidOrigin: {},
+	AnswerInvalidFilename:                 {},
+	AnswerInvalidDestination:              {},
+	AnswerInvalidOrigin:                   {},
 	AnswerStorageRecordFormatNotSupported: {},
 	AnswerMaximumRecordLengthNotSupported: {},
-	AnswerFilesizeTooBig: {},
-	AnswerInvalidRecordCount: {},
-	AnswerInvalidByteCount: {},
-	AnswerAccessMethodFailure: {},
-	AnswerDuplicateFile: {},
-	AnswerFileDirectionRefused: {},
-	AnswerCipherSuiteNotSupported: {},
-	AnswerEncryptedFileNotAllowed: {},
-	AnswerUnencryptedFileNotAllowed: {},
-	AnswerCompressionNotAllowed: {},
-	AnswerSignedFileNotAllowed: {},
-	AnswerUnsignedFileNotAllowed: {},
-	AnswerUnspecified: {},
+	AnswerFilesizeTooBig:                  {},
+	AnswerInvalidRecordCount:              {},
+	AnswerInvalidByteCount:                {},
+	AnswerAccessMethodFailure:             {},
+	AnswerDuplicateFile:                   {},
+	AnswerFileDirectionRefused:            {},
+	AnswerCipherSuiteNotSupported:         {},
+	AnswerEncryptedFileNotAllowed:         {},
+	AnswerUnencryptedFileNotAllowed:       {},
+	AnswerCompressionNotAllowed:           {},
+	AnswerSignedFileNotAllowed:            {},
+	AnswerUnsignedFileNotAllowed:          {},
+	AnswerUnspecified:                     {},
 }
 
 const (

@@ -8,12 +8,12 @@ import (
 
 func TestStartFilePositiveAnswer(t *testing.T) {
 	for _, scenario := range []struct {
-		name   string
-		input  int
+		with  string
+		input int
 		expect func(t *testing.T, cmd oftp2.Command, err error)
 	}{
 		{
-			name:  "with a standard input",
+			with:  "a standard input",
 			input: 1,
 			expect: func(t *testing.T, cmd oftp2.Command, err error) {
 				require.NoError(t, err)
@@ -21,7 +21,7 @@ func TestStartFilePositiveAnswer(t *testing.T) {
 			},
 		},
 		{
-			name:  "with a negative input",
+			with:  "a negative input",
 			input: -1,
 			expect: func(t *testing.T, cmd oftp2.Command, err error) {
 				require.Error(t, err)
@@ -29,7 +29,7 @@ func TestStartFilePositiveAnswer(t *testing.T) {
 			},
 		},
 		{
-			name:  "with a exceeding input",
+			with:  "a exceeding input",
 			input: 100000000000000000,
 			expect: func(t *testing.T, cmd oftp2.Command, err error) {
 				require.Error(t, err)
@@ -37,7 +37,7 @@ func TestStartFilePositiveAnswer(t *testing.T) {
 			},
 		},
 	} {
-		t.Run(scenario.name, func(t *testing.T) {
+		t.Run(scenario.with, func(t *testing.T) {
 			session, err := oftp2.NewStartFilePositiveAnswer(scenario.input)
 			scenario.expect(t, session, err)
 		})
@@ -46,12 +46,12 @@ func TestStartFilePositiveAnswer(t *testing.T) {
 
 func TestStartFilePositiveAnswer_Valid(t *testing.T) {
 	for _, scenario := range []struct {
-		name   string
-		input  func(t *testing.T) []byte
+		with  string
+		input func(t *testing.T) []byte
 		expect func(t *testing.T, sfpa oftp2.StartFilePositiveAnswerCmd)
 	}{
 		{
-			name: "with a standard message",
+			with: "a standard message",
 			input: func(t *testing.T) []byte {
 				return validStartFilePositive(t)
 			},
@@ -61,7 +61,7 @@ func TestStartFilePositiveAnswer_Valid(t *testing.T) {
 			},
 		},
 		{
-			name: "with a wrong cmd type",
+			with: "a wrong cmd type",
 			input: func(t *testing.T) []byte {
 				p := validStartFilePositive(t)
 				p[0] = '^'
@@ -73,7 +73,7 @@ func TestStartFilePositiveAnswer_Valid(t *testing.T) {
 			},
 		},
 		{
-			name: "with a wrong length",
+			with: "a wrong length",
 			input: func(t *testing.T) []byte {
 				p := validStartFilePositive(t)
 				return append(p, ' ')
@@ -84,7 +84,7 @@ func TestStartFilePositiveAnswer_Valid(t *testing.T) {
 			},
 		},
 		{
-			name: "missing carriage return",
+			with: "missing carriage return",
 			input: func(t *testing.T) []byte {
 				p := validStartFilePositive(t)
 				p[len(p)-1] = 'd'
@@ -96,7 +96,7 @@ func TestStartFilePositiveAnswer_Valid(t *testing.T) {
 			},
 		},
 		{
-			name: "with corrupted answer count",
+			with: "corrupted answer count",
 			input: func(t *testing.T) []byte {
 				p := validStartFilePositive(t)
 				p[3] = 'd'
@@ -108,7 +108,7 @@ func TestStartFilePositiveAnswer_Valid(t *testing.T) {
 			},
 		},
 		{
-			name: "with negative answer count",
+			with: "negative answer count",
 			input: func(t *testing.T) []byte {
 				p := validStartFilePositive(t)
 				p[1] = '-'
@@ -120,7 +120,7 @@ func TestStartFilePositiveAnswer_Valid(t *testing.T) {
 			},
 		},
 	} {
-		t.Run(scenario.name, func(t *testing.T) {
+		t.Run(scenario.with, func(t *testing.T) {
 			scenario.expect(t, scenario.input(t))
 		})
 	}

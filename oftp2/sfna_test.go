@@ -8,16 +8,16 @@ import (
 
 func TestStartFileNegativeAnswer(t *testing.T) {
 	for _, scenario := range []struct {
-		name   string
-		input  negativeInput
+		with  string
+		input oftp2.NegativeFileInput
 		expect func(t *testing.T, cmd oftp2.Command, err error)
 	}{
 		{
-			name: "with a standard input",
-			input: negativeInput{
-				reasonCode: oftp2.AnswerInvalidFilename,
-				retry:      true,
-				reasonText: "BECAUSE",
+			with: "a standard input",
+			input: oftp2.NegativeFileInput{
+				Reason:     oftp2.AnswerInvalidFilename,
+				Retry:      true,
+				ReasonText: "BECAUSE",
 			},
 			expect: func(t *testing.T, cmd oftp2.Command, err error) {
 				require.NoError(t, err)
@@ -25,11 +25,11 @@ func TestStartFileNegativeAnswer(t *testing.T) {
 			},
 		},
 		{
-			name: "with an unknown reasonCode",
-			input: negativeInput{
-				reasonCode: 98,
-				retry:      true,
-				reasonText: "",
+			with: "an unknown reasonCode",
+			input: oftp2.NegativeFileInput{
+				Reason:     98,
+				Retry:      true,
+				ReasonText: "",
 			},
 			expect: func(t *testing.T, cmd oftp2.Command, err error) {
 				require.EqualError(t, err, "unknown answer reason: 98")
@@ -37,21 +37,20 @@ func TestStartFileNegativeAnswer(t *testing.T) {
 			},
 		},
 		{
-			name: "with an reason text that is too long",
-			input: negativeInput{
-				reasonCode: oftp2.AnswerInvalidFilename,
-				retry:      false,
-				reasonText: generateLongString(1000),
+			with: "a reason text that is too long",
+			input: oftp2.NegativeFileInput{
+				Reason:     oftp2.AnswerInvalidFilename,
+				Retry:      false,
+				ReasonText: generateLongString(1000),
 			},
 			expect: func(t *testing.T, cmd oftp2.Command, err error) {
-				require.EqualError(t, err, "reason text is too long")
+				require.EqualError(t, err, "reason text is too long: 1000")
 				require.Nil(t, cmd)
 			},
 		},
 	} {
-		t.Run(scenario.name, func(t *testing.T) {
-			in := scenario.input
-			s, err := oftp2.NewStartFileNegativeAnswer(in.reasonCode, in.retry, in.reasonText)
+		t.Run(scenario.with, func(t *testing.T) {
+			s, err := oftp2.NewStartFileNegativeAnswer(scenario.input)
 			scenario.expect(t, s, err)
 		})
 	}
@@ -59,14 +58,18 @@ func TestStartFileNegativeAnswer(t *testing.T) {
 
 func TestStartFileNegativeAnswer_Valid(t *testing.T) {
 	for _, scenario := range []struct {
-		name   string
-		input  func(t *testing.T) []byte
+		with  string
+		input func(t *testing.T) []byte
 		expect func(t *testing.T, sfna oftp2.StartFileNegativeAnswerCmd)
 	}{
 		{
-			name: "with a standard message",
+			with: "a standard message",
 			input: func(t *testing.T) []byte {
-				file, err := oftp2.NewStartFileNegativeAnswer(oftp2.AnswerInvalidFilename, false, "MY_TEXT")
+				file, err := oftp2.NewStartFileNegativeAnswer(oftp2.NegativeFileInput{
+					Reason:     oftp2.AnswerInvalidFilename,
+					Retry:      false,
+					ReasonText: "MY_TEXT",
+				})
 				require.NoError(t, err)
 				return file
 			},
@@ -74,11 +77,11 @@ func TestStartFileNegativeAnswer_Valid(t *testing.T) {
 				require.NoError(t, sfna.Valid())
 				require.Equal(t, oftp2.AnswerInvalidFilename, sfna.ReasonCode())
 				require.Equal(t, false, sfna.Retry())
-				require.Equal(t, "MY_TEXT", string(sfna.ReasonText()))
+				require.Equal(t, "MY_TEXT", sfna.ReasonText())
 			},
 		},
 		{
-			name: "with a wrong cmd type",
+			with: "a wrong cmd type",
 			input: func(t *testing.T) []byte {
 				p := validStartFileNegative(t)
 				p[0] = '^'
@@ -88,11 +91,11 @@ func TestStartFileNegativeAnswer_Valid(t *testing.T) {
 				require.EqualError(t, sfna.Valid(), "does not start with 3, but with ^")
 				require.Equal(t, oftp2.AnswerInvalidFilename, sfna.ReasonCode())
 				require.Equal(t, true, sfna.Retry())
-				require.Equal(t, "", string(sfna.ReasonText()))
+				require.Equal(t, "", sfna.ReasonText())
 			},
 		},
 		{
-			name: "with a wrong length",
+			with: "a wrong length",
 			input: func(t *testing.T) []byte {
 				p := validStartFileNegative(t)
 				return append(p, ' ')
@@ -101,11 +104,11 @@ func TestStartFileNegativeAnswer_Valid(t *testing.T) {
 				require.EqualError(t, sfna.Valid(), "expected the length of 8, but got 9")
 				require.Equal(t, oftp2.AnswerInvalidFilename, sfna.ReasonCode())
 				require.Equal(t, true, sfna.Retry())
-				require.Equal(t, "\r", string(sfna.ReasonText()))
+				require.Equal(t, "\r", sfna.ReasonText())
 			},
 		},
 		{
-			name: "missing carriage return",
+			with: "missing carriage return",
 			input: func(t *testing.T) []byte {
 				p := validStartFileNegative(t)
 				p[len(p)-1] = 'd'
@@ -115,11 +118,11 @@ func TestStartFileNegativeAnswer_Valid(t *testing.T) {
 				require.EqualError(t, sfna.Valid(), "does not end on carriage return, but on d")
 				require.Equal(t, oftp2.AnswerInvalidFilename, sfna.ReasonCode())
 				require.Equal(t, true, sfna.Retry())
-				require.Equal(t, "", string(sfna.ReasonText()))
+				require.Equal(t, "", sfna.ReasonText())
 			},
 		},
 		{
-			name: "with corrupted reason code",
+			with: "corrupted reason code",
 			input: func(t *testing.T) []byte {
 				p := validStartFileNegative(t)
 				p[2] = 'd'
@@ -129,11 +132,11 @@ func TestStartFileNegativeAnswer_Valid(t *testing.T) {
 				require.EqualError(t, sfna.Valid(), `invalid reason code`)
 				require.Equal(t, oftp2.AnswerReason(0), sfna.ReasonCode())
 				require.Equal(t, true, sfna.Retry())
-				require.Equal(t, "", string(sfna.ReasonText()))
+				require.Equal(t, "", sfna.ReasonText())
 			},
 		},
 		{
-			name: "with corrupted retry",
+			with: "corrupted retry",
 			input: func(t *testing.T) []byte {
 				p := validStartFileNegative(t)
 				p[3] = 'd'
@@ -143,13 +146,16 @@ func TestStartFileNegativeAnswer_Valid(t *testing.T) {
 				require.EqualError(t, sfna.Valid(), `invalid retry`)
 				require.Equal(t, oftp2.AnswerInvalidFilename, sfna.ReasonCode())
 				require.Equal(t, false, sfna.Retry())
-				require.Equal(t, "", string(sfna.ReasonText()))
+				require.Equal(t, "", sfna.ReasonText())
 			},
 		},
 		{
-			name: "with corrupted reason length",
+			with: "corrupted reason length",
 			input: func(t *testing.T) []byte {
-				file, err := oftp2.NewStartFileNegativeAnswer(oftp2.AnswerInvalidFilename, false, "MY_TEXT")
+				file, err := oftp2.NewStartFileNegativeAnswer(oftp2.NegativeFileInput{
+					Reason:     oftp2.AnswerInvalidFilename,
+					ReasonText: "MY_TEXT",
+				})
 				require.NoError(t, err)
 				file[5] = 'd'
 				return file
@@ -158,24 +164,21 @@ func TestStartFileNegativeAnswer_Valid(t *testing.T) {
 				require.EqualError(t, sfna.Valid(), `strconv.Atoi: parsing "0d7": invalid syntax`)
 				require.Equal(t, oftp2.AnswerInvalidFilename, sfna.ReasonCode())
 				require.Equal(t, false, sfna.Retry())
-				require.Equal(t, "MY_TEXT", string(sfna.ReasonText()))
+				require.Equal(t, "MY_TEXT", sfna.ReasonText())
 			},
 		},
 	} {
-		t.Run(scenario.name, func(t *testing.T) {
+		t.Run(scenario.with, func(t *testing.T) {
 			scenario.expect(t, scenario.input(t))
 		})
 	}
 }
 
-type negativeInput struct {
-	reasonCode oftp2.AnswerReason
-	retry      bool
-	reasonText string
-}
-
 func validStartFileNegative(t *testing.T) oftp2.Command {
-	file, err := oftp2.NewStartFileNegativeAnswer(oftp2.AnswerInvalidFilename, true, "")
+	file, err := oftp2.NewStartFileNegativeAnswer(oftp2.NegativeFileInput{
+		Reason: oftp2.AnswerInvalidFilename,
+		Retry: true,
+	})
 	require.NoError(t, err)
 	return file
 }

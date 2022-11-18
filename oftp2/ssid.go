@@ -34,12 +34,12 @@ import (
 type StartSessionCmd []byte
 
 func (c StartSessionCmd) Valid() error {
-	if size := len(c); size != 57 {
+	if size := len(c); size != 61 {
 		return fmt.Errorf("invalid size: %d", size)
-	} else if cmd := c[0]; cmd != 'X' {
-		return fmt.Errorf(InvalidPrefixErrorFormat, "X", cmd)
-	}else if cmd := string(c[56]); cmd != CarriageReturn {
-		return fmt.Errorf(InvalidSuffixErrorFormat, cmd)
+	} else if StartSessionMessage.Byte() != c[0] {
+		return NewInvalidPrefixError(StartSessionMessage.String(), string(c[0]))
+	} else if cmd := string(c[60]); CarriageReturn != cmd {
+		return NewNoCrSuffixError(cmd)
 	} else if err := c.IdentificationCode().Valid(); err != nil {
 		return err
 	} else if level := c.ProtocolLevel(); level != '5' {
@@ -178,6 +178,7 @@ func NewStartSession(input StartSessionInput) (Command, error) {
 		boolToString(input.SpecialLogic) +
 		credit +
 		boolToString(input.SecureAuthentication) +
+		reserved(4) +
 		userData +
 		CarriageReturn), nil
 }
@@ -186,4 +187,12 @@ func isCapability(input SsidCapability) bool {
 	return input == CapabilitySend ||
 		input == CapabilityReceive ||
 		input == CapabilityBoth
+}
+
+func reserved(c int) string {
+	res := ""
+	for i := 0; i < c; i++ {
+		res += " "
+	}
+	return res
 }

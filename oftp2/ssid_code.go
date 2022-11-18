@@ -1,9 +1,5 @@
 package oftp2
 
-import (
-	"fmt"
-)
-
 // o-------------------------------------------------------------------o
 // | Pos | Field     | Description                           | Format  |
 // |-----+-----------+---------------------------------------+---------|
@@ -19,7 +15,7 @@ type IdentificationCode []byte
 
 func (c IdentificationCode) Valid() error {
 	if size := len(c); size != 25 {
-		return fmt.Errorf(InvalidLengthErrorFormat, 25, size)
+		return NewInvalidLengthError(25, size)
 	}
 	return nil
 }
