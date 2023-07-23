@@ -1,4 +1,4 @@
-module bifroest
+module github.com/elgohr/go-oftp2
 
 go 1.17
 

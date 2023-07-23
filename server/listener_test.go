@@ -1,9 +1,8 @@
-package main_test
+package main
 
 import (
-	"bifroest/oftp2"
-	"bifroest/server"
 	"bufio"
+	"github.com/elgohr/go-oftp2/oftp2"
 	"github.com/stretchr/testify/require"
 	"net"
 	"os"
@@ -12,7 +11,7 @@ import (
 
 func TestListener(t *testing.T) {
 	c := make(chan os.Signal, 1)
-	p, err := main.NewListener(c)
+	p, err := NewListener(c)
 	require.NoError(t, err)
 	go p.Listen()
 

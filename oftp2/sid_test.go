@@ -1,7 +1,7 @@
 package oftp2_test
 
 import (
-	"bifroest/oftp2"
+	"github.com/elgohr/go-oftp2/oftp2"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

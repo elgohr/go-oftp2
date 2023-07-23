@@ -1,15 +1,15 @@
 package oftp2_test
 
 import (
-	"bifroest/oftp2"
+	"github.com/elgohr/go-oftp2/oftp2"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestIdentificationCode(t *testing.T) {
 	for _, scenario := range []struct {
-		with  string
-		input func() oftp2.SsidIdentificationCodeInput
+		with   string
+		input  func() oftp2.SsidIdentificationCodeInput
 		expect func(t *testing.T, code oftp2.IdentificationCode, err error)
 	}{
 		{
@@ -80,8 +80,8 @@ func TestIdentificationCode(t *testing.T) {
 
 func TestIdentificationCode_Valid(t *testing.T) {
 	for _, scenario := range []struct {
-		with  string
-		input func() oftp2.IdentificationCode
+		with   string
+		input  func() oftp2.IdentificationCode
 		expect func(t *testing.T, code oftp2.IdentificationCode)
 	}{
 		{
@@ -115,11 +115,11 @@ func TestIdentificationCode_Valid(t *testing.T) {
 
 var (
 	validSsidIdCodeInput = oftp2.SsidIdentificationCodeInput{
-	OdetteIdentifier:            "X",
-	InternationalCodeDesignator: "1234",
-	OrganisationCode:            "ORG",
-	ComputerSubaddress:          "abcdef",
-}
+		OdetteIdentifier:            "X",
+		InternationalCodeDesignator: "1234",
+		OrganisationCode:            "ORG",
+		ComputerSubaddress:          "abcdef",
+	}
 	invalidSsidIdCode = oftp2.IdentificationCode("THIS_MESSAGE_IS_WAY_TOO_LONG")
 )
 

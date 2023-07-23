@@ -1,17 +1,17 @@
 package main
 
 import (
-	oftp22 "bifroest/oftp2"
 	"bufio"
 	"fmt"
+	"github.com/elgohr/go-oftp2/oftp2"
 	"log"
 	"net"
 	"os"
 )
 
 type Listener struct {
-	c <-chan os.Signal
-	listener *net.TCPListener
+	c           <-chan os.Signal
+	listener    *net.TCPListener
 	connections map[string]struct{}
 }
 
@@ -25,8 +25,8 @@ func NewListener(c <-chan os.Signal) (*Listener, error) {
 		return nil, err
 	}
 	return &Listener{
-		c:        c,
-		listener: listener,
+		c:           c,
+		listener:    listener,
 		connections: map[string]struct{}{},
 	}, nil
 }
@@ -52,14 +52,14 @@ func (p *Listener) handle(connection *net.TCPConn) {
 	for {
 		if _, exists := p.connections[connection.RemoteAddr().String()]; !exists {
 			fmt.Printf("Serving %s\n", connection.RemoteAddr().String())
-			if _, err := connection.Write(oftp22.NewStartSessionReadyMessage().StreamTransmissionBuffer()); err != nil {
+			if _, err := connection.Write(oftp2.NewStartSessionReadyMessage().StreamTransmissionBuffer()); err != nil {
 				log.Println(err)
 				return
 			}
 			//p.connections[connection.RemoteAddr().String()] = struct{}{}
 		}
 
-		c,_,  err := reader.ReadRune()
+		c, _, err := reader.ReadRune()
 		if err != nil {
 			log.Println(err)
 			return

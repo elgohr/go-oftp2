@@ -1,15 +1,15 @@
 package oftp2_test
 
 import (
-	"bifroest/oftp2"
+	"github.com/elgohr/go-oftp2/oftp2"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestStartFilePositiveAnswer(t *testing.T) {
 	for _, scenario := range []struct {
-		with  string
-		input int
+		with   string
+		input  int
 		expect func(t *testing.T, cmd oftp2.Command, err error)
 	}{
 		{
@@ -46,8 +46,8 @@ func TestStartFilePositiveAnswer(t *testing.T) {
 
 func TestStartFilePositiveAnswer_Valid(t *testing.T) {
 	for _, scenario := range []struct {
-		with  string
-		input func(t *testing.T) []byte
+		with   string
+		input  func(t *testing.T) []byte
 		expect func(t *testing.T, sfpa oftp2.StartFilePositiveAnswerCmd)
 	}{
 		{

@@ -1,15 +1,15 @@
 package oftp2_test
 
 import (
-	"bifroest/oftp2"
+	"github.com/elgohr/go-oftp2/oftp2"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestStartSessionErrors(t *testing.T) {
 	for _, scenario := range []struct {
-		with  string
-		input func(t *testing.T) oftp2.StartSessionInput
+		with   string
+		input  func(t *testing.T) oftp2.StartSessionInput
 		expect func(t *testing.T, cmd oftp2.Command, err error)
 	}{
 		{
@@ -135,8 +135,8 @@ func TestStartSessionErrors(t *testing.T) {
 
 func TestStartSessionCmd_Valid(t *testing.T) {
 	for _, scenario := range []struct {
-		with  string
-		input func(t *testing.T) []byte
+		with   string
+		input  func(t *testing.T) []byte
 		expect func(t *testing.T, ssid oftp2.StartSessionCmd)
 	}{
 		{

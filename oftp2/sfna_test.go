@@ -1,15 +1,15 @@
 package oftp2_test
 
 import (
-	"bifroest/oftp2"
+	"github.com/elgohr/go-oftp2/oftp2"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestStartFileNegativeAnswer(t *testing.T) {
 	for _, scenario := range []struct {
-		with  string
-		input oftp2.NegativeFileInput
+		with   string
+		input  oftp2.NegativeFileInput
 		expect func(t *testing.T, cmd oftp2.Command, err error)
 	}{
 		{
@@ -58,8 +58,8 @@ func TestStartFileNegativeAnswer(t *testing.T) {
 
 func TestStartFileNegativeAnswer_Valid(t *testing.T) {
 	for _, scenario := range []struct {
-		with  string
-		input func(t *testing.T) []byte
+		with   string
+		input  func(t *testing.T) []byte
 		expect func(t *testing.T, sfna oftp2.StartFileNegativeAnswerCmd)
 	}{
 		{
@@ -177,7 +177,7 @@ func TestStartFileNegativeAnswer_Valid(t *testing.T) {
 func validStartFileNegative(t *testing.T) oftp2.Command {
 	file, err := oftp2.NewStartFileNegativeAnswer(oftp2.NegativeFileInput{
 		Reason: oftp2.AnswerInvalidFilename,
-		Retry: true,
+		Retry:  true,
 	})
 	require.NoError(t, err)
 	return file
